@@ -86,43 +86,6 @@ class AcademicStageScreen extends StatelessWidget {
                   height: totalH,
                   child: Stack(
                     children: [
-                      // --- Back Button ---
-                      Positioned(
-                        top: topPadding + 6,
-                        left: 16,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: onBack ?? () => Navigator.maybePop(context),
-                            borderRadius: BorderRadius.circular(22),
-                            child: Container(
-                              width: 42,
-                              height: 42,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.white,
-                                border: Border.all(
-                                  color: const Color(0xFFE2E7F2),
-                                  width: 1.2,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 3),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.arrow_back_ios_new_rounded,
-                                size: 17,
-                                color: Color(0xFF1E2A54),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
                       // --- Scrollable Content: Header + Stage Cards ---
                       Positioned.fill(
                         child: SingleChildScrollView(
@@ -174,6 +137,43 @@ class AcademicStageScreen extends StatelessWidget {
                                   onTap: () => onStageSelected?.call(stage.title),
                                 ),
                             ],
+                          ),
+                        ),
+                      ),
+
+                      // --- Top-Left Back Button (On top in Z-index) ---
+                      Positioned(
+                        top: topPadding + 6,
+                        left: 16,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: onBack ?? () => Navigator.maybePop(context),
+                            borderRadius: BorderRadius.circular(22),
+                            child: Container(
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white,
+                                border: Border.all(
+                                  color: const Color(0xFFE2E7F2),
+                                  width: 1.2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.05),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                                size: 17,
+                                color: Color(0xFF1E2A54),
+                              ),
+                            ),
                           ),
                         ),
                       ),

@@ -68,6 +68,9 @@ flutter:
     - assets/images/goals/
     - assets/images/locations/
     - assets/images/profile/
+    - assets/images/home/
+    - assets/images/dashboard/
+    - assets/images/opportunities/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

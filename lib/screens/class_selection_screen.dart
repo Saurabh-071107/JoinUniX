@@ -5,12 +5,16 @@ import '../widgets/class_card_item.dart';
 /// Screen allowing the user to select their class/grade (e.g., Class 8 to Class 12).
 class ClassSelectionScreen extends StatefulWidget {
   final String initialClass;
+  final String title;
+  final List<String> options;
   final VoidCallback? onBack;
   final ValueChanged<String>? onContinue;
 
   const ClassSelectionScreen({
     super.key,
     this.initialClass = 'Class 10',
+    this.title = 'What class are you in?',
+    this.options = const ['Class 8', 'Class 9', 'Class 10', 'Class 11', 'Class 12'],
     this.onBack,
     this.onContinue,
   });
@@ -22,18 +26,12 @@ class ClassSelectionScreen extends StatefulWidget {
 class _ClassSelectionScreenState extends State<ClassSelectionScreen> {
   late String _selectedClass;
 
-  static const _classList = [
-    'Class 8',
-    'Class 9',
-    'Class 10',
-    'Class 11',
-    'Class 12',
-  ];
+  List<String> get _classList => widget.options;
 
   @override
   void initState() {
     super.initState();
-    _selectedClass = widget.initialClass;
+    _selectedClass = _classList.contains(widget.initialClass) ? widget.initialClass : '';
   }
 
   void _handleContinue() {
@@ -101,8 +99,8 @@ class _ClassSelectionScreenState extends State<ClassSelectionScreen> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
                               // Title
-                              const Text(
-                                'What class are you in?',
+                              Text(
+                                widget.title,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontSize: 27,

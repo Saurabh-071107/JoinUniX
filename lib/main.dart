@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'core/responsive.dart';
+import 'data/onboarding_options.dart';
 import 'screens/academic_stage_screen.dart';
 import 'screens/career_interests_screen.dart';
 import 'screens/class_selection_screen.dart';
 import 'screens/future_goals_screen.dart';
+import 'screens/home_screen.dart';
 import 'screens/intro_screen.dart';
 import 'screens/mobile_number_screen.dart';
 import 'screens/name_screen.dart';
@@ -65,8 +66,18 @@ class _SplashScreenHostState extends State<SplashScreenHost> {
   List<String> _selectedGoals = const ['Find a College'];
   String _selectedLocation = 'India';
 
+  bool get _hasStream => !_selectedStage.startsWith('School');
+  bool get _hasClass => _selectedStage != 'Working Professional' && !_selectedStage.startsWith('Gap');
+
   @override
   Widget build(BuildContext context) {
+    final (classTitle, classOptions) = switch (_selectedStage) {
+      'Class 11 - 12' => ('What class are you in?', seniorClasses),
+      'Undergraduate' => ('Which year are you in?', ugYears),
+      'Postgraduate' => ('Which year are you in?', pgYears),
+      _ => ('What class are you in?', schoolClasses),
+    };
+
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 500),
       switchInCurve: Curves.easeOut,
@@ -112,21 +123,55 @@ class _SplashScreenHostState extends State<SplashScreenHost> {
             onBack: () => setState(() => _step = AppScreenStep.name),
             onStageSelected: (stage) => setState(() {
               _selectedStage = stage;
-              _step = AppScreenStep.stream;
+              _selectedStream = '';
+              _step = _hasStream ? AppScreenStep.stream : AppScreenStep.classSelection;
             }),
           ),
-        AppScreenStep.stream => StreamScreen(
-            key: const ValueKey('StreamScreen'),
-            onBack: () => setState(() => _step = AppScreenStep.stage),
-            onContinue: (stream) => setState(() {
-              _selectedStream = stream;
-              _step = AppScreenStep.classSelection;
-            }),
-          ),
+        AppScreenStep.stream => switch (_selectedStage) {
+            'Undergraduate' => StreamScreen(
+                key: const ValueKey('UgStreamScreen'),
+                title: 'What are you studying?',
+                subtitle: 'Choose your course',
+                options: ugStreams,
+                onBack: () => setState(() => _step = AppScreenStep.stage),
+                onContinue: _onStreamContinue,
+              ),
+            'Postgraduate' => StreamScreen(
+                key: const ValueKey('PgStreamScreen'),
+                title: 'What are you pursuing?',
+                subtitle: 'Choose your program and field',
+                options: pgStreams,
+                dropdownLabel: 'Field / Specialization',
+                dropdownHint: 'Select your field',
+                dropdownIcon: Icons.school_rounded,
+                dropdownItems: (s) => pgFields[s] ?? const [],
+                onBack: () => setState(() => _step = AppScreenStep.stage),
+                onContinue: _onStreamContinue,
+              ),
+            'Working Professional' => StreamScreen(
+                key: const ValueKey('ProfessionScreen'),
+                title: 'What do you do?',
+                subtitle: 'Choose your profession',
+                options: professions,
+                dropdownLabel: 'Experience Level',
+                dropdownHint: 'Select years of experience',
+                dropdownIcon: Icons.work_history_rounded,
+                dropdownItems: (_) => experienceRanges,
+                onBack: () => setState(() => _step = AppScreenStep.stage),
+                onContinue: _onStreamContinue,
+              ),
+            _ => StreamScreen(
+                key: const ValueKey('StreamScreen'),
+                onBack: () => setState(() => _step = AppScreenStep.stage),
+                onContinue: _onStreamContinue,
+              ),
+          },
         AppScreenStep.classSelection => ClassSelectionScreen(
-            key: const ValueKey('ClassSelectionScreen'),
+            key: ValueKey('ClassSelectionScreen$_selectedStage'),
             initialClass: _selectedClass,
-            onBack: () => setState(() => _step = AppScreenStep.stream),
+            title: classTitle,
+            options: classOptions,
+            onBack: () => setState(() => _step = _hasStream ? AppScreenStep.stream : AppScreenStep.stage),
             onContinue: (selectedClass) => setState(() {
               _selectedClass = selectedClass;
               _step = AppScreenStep.careerInterests;
@@ -135,7 +180,7 @@ class _SplashScreenHostState extends State<SplashScreenHost> {
         AppScreenStep.careerInterests => CareerInterestsScreen(
             key: const ValueKey('CareerInterestsScreen'),
             initialSelected: _selectedInterests,
-            onBack: () => setState(() => _step = AppScreenStep.classSelection),
+            onBack: () => setState(() => _step = _hasClass ? AppScreenStep.classSelection : AppScreenStep.stream),
             onContinue: (interests) => setState(() {
               _selectedInterests = interests;
               _step = AppScreenStep.futureGoals;
@@ -162,7 +207,7 @@ class _SplashScreenHostState extends State<SplashScreenHost> {
         AppScreenStep.profileReady => ProfileReadyScreen(
             key: const ValueKey('ProfileReadyScreen'),
             selectedClass: _selectedClass,
-            selectedStream: _selectedStream,
+            selectedStream: _selectedStream.isNotEmpty ? _selectedStream : _selectedStage,
             selectedInterests: _selectedInterests,
             selectedGoals: _selectedGoals,
             selectedLocation: _selectedLocation,
@@ -181,159 +226,15 @@ class _SplashScreenHostState extends State<SplashScreenHost> {
       },
     );
   }
+
+  void _onStreamContinue(String stream) => setState(() {
+        _selectedStream = stream;
+        if (_hasClass) {
+          _step = AppScreenStep.classSelection;
+        } else {
+          _selectedClass = _selectedStage; // no class page for this stage
+          _step = AppScreenStep.careerInterests;
+        }
+      });
 }
 
-class HomeScreen extends StatefulWidget {
-  final String userName;
-  final String stage;
-  final String stream;
-  final String selectedClass;
-  final List<String> interests;
-  final List<String> goals;
-  final String location;
-
-  const HomeScreen({
-    super.key,
-    this.userName = 'User',
-    this.stage = '',
-    this.stream = '',
-    this.selectedClass = '',
-    this.interests = const [],
-    this.goals = const [],
-    this.location = '',
-  });
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
-
-  static const _destinations = [
-    (icon: Icons.dashboard_outlined, selected: Icons.dashboard, label: 'Dashboard'),
-    (icon: Icons.folder_outlined, selected: Icons.folder, label: 'Projects'),
-    (icon: Icons.settings_outlined, selected: Icons.settings, label: 'Settings'),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final padding = context.responsive(mobile: 16.0, tablet: 24.0, desktop: 32.0);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('JoinUNiX'),
-        centerTitle: context.isMobile,
-      ),
-      body: Row(
-        children: [
-          if (!context.isMobile)
-            NavigationRail(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (i) => setState(() => _selectedIndex = i),
-              labelType: NavigationRailLabelType.selected,
-              destinations: [
-                for (final d in _destinations)
-                  NavigationRailDestination(
-                    icon: Icon(d.icon),
-                    selectedIcon: Icon(d.selected),
-                    label: Text(d.label),
-                  ),
-              ],
-            ),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.all(padding),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 800),
-                  child: Card(
-                    elevation: 0,
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                    child: Padding(
-                      padding: EdgeInsets.all(padding),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _destinations[_selectedIndex].selected,
-                            size: context.responsive(mobile: 48.0, desktop: 64.0),
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Welcome, ${widget.userName}!',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Class: ${widget.selectedClass.isNotEmpty ? widget.selectedClass : "Not set"} • Stream: ${widget.stream.isNotEmpty ? widget.stream : "Not set"}',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          if (widget.interests.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              'Interests: ${widget.interests.join(", ")}',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                          if (widget.goals.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              'Looking for: ${widget.goals.join(", ")}',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: const Color(0xFF6F2CFF),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                          if (widget.location.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              'Study Location: ${widget.location}',
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: const Color(0xFF0F62FE),
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                          const SizedBox(height: 6),
-                          Text(
-                            'Active Viewport: ${context.isDesktop ? "Desktop" : context.isTablet ? "Tablet" : "Mobile"}',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: context.isMobile
-          ? NavigationBar(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (i) => setState(() => _selectedIndex = i),
-              destinations: [
-                for (final d in _destinations)
-                  NavigationDestination(
-                    icon: Icon(d.icon),
-                    selectedIcon: Icon(d.selected),
-                    label: d.label,
-                  ),
-              ],
-            )
-          : null,
-    );
-  }
-}
