@@ -3,10 +3,12 @@ import '../../data/explore_data.dart';
 
 class ExploreFeatureGrid extends StatelessWidget {
   final ValueChanged<ExploreFeatureCardItem>? onCardTap;
+  final List<ExploreFeatureCardItem> cards;
 
   const ExploreFeatureGrid({
     super.key,
     this.onCardTap,
+    this.cards = exploreFeatureCards,
   });
 
   @override
@@ -23,11 +25,11 @@ class ExploreFeatureGrid extends StatelessWidget {
 
           // Chunk items into rows based on column count
           final rows = <List<ExploreFeatureCardItem>>[];
-          for (var i = 0; i < exploreFeatureCards.length; i += crossAxisCount) {
-            final end = (i + crossAxisCount > exploreFeatureCards.length)
-                ? exploreFeatureCards.length
+          for (var i = 0; i < cards.length; i += crossAxisCount) {
+            final end = (i + crossAxisCount > cards.length)
+                ? cards.length
                 : i + crossAxisCount;
-            rows.add(exploreFeatureCards.sublist(i, end));
+            rows.add(cards.sublist(i, end));
           }
 
           return Column(

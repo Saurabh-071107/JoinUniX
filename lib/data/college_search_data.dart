@@ -20,6 +20,8 @@ class CollegeItem {
   final String type; // e.g. 'Govt / INI', 'Private Deemed', 'Global University'
   final bool isVerified;
   final bool isFavorite;
+  final String? logoPath;
+  final List<String> galleryImages;
 
   const CollegeItem({
     required this.id,
@@ -41,9 +43,15 @@ class CollegeItem {
     this.type = 'Government / INI',
     this.isVerified = true,
     this.isFavorite = false,
+    this.logoPath,
+    this.galleryImages = const [],
   });
 
-  CollegeItem copyWith({bool? isFavorite}) {
+  CollegeItem copyWith({
+    bool? isFavorite,
+    String? logoPath,
+    List<String>? galleryImages,
+  }) {
     return CollegeItem(
       id: id,
       shortName: shortName,
@@ -64,6 +72,8 @@ class CollegeItem {
       type: type,
       isVerified: isVerified,
       isFavorite: isFavorite ?? this.isFavorite,
+      logoPath: logoPath ?? this.logoPath,
+      galleryImages: galleryImages ?? this.galleryImages,
     );
   }
 }
@@ -80,6 +90,12 @@ const allCollegesList = [
     badgeText: 'NIRF #3 Engineering',
     badgeColor: Color(0xFF4F46E5),
     imagePath: 'assets/images/dashboard/explore_iit_bombay.jpg',
+    logoPath: 'assets/images/dashboard/iit_bombay_logo.jpg',
+    galleryImages: [
+      'assets/images/dashboard/iit_bombay_main.jpg',
+      'assets/images/dashboard/iit_bombay_academic.jpg',
+      'assets/images/dashboard/iit_bombay_lake.jpg',
+    ],
     tags: ['IIT', 'Engineering', 'Govt', 'Research'],
     avgFees: '₹2.1 L / yr',
     placementRate: '96%',

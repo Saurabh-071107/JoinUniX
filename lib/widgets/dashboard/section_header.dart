@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 class SectionHeader extends StatelessWidget {
   final String? icon;
+  final IconData? iconData;
+  final Color? iconColor;
   final String title;
   final String actionText;
   final VoidCallback? onActionTap;
@@ -9,6 +11,8 @@ class SectionHeader extends StatelessWidget {
   const SectionHeader({
     super.key,
     this.icon,
+    this.iconData,
+    this.iconColor,
     required this.title,
     this.actionText = 'See All',
     this.onActionTap,
@@ -23,7 +27,14 @@ class SectionHeader extends StatelessWidget {
         children: [
           Row(
             children: [
-              if (icon != null && icon!.isNotEmpty) ...[
+              if (iconData != null) ...[
+                Icon(
+                  iconData,
+                  size: 20,
+                  color: iconColor ?? const Color(0xFFE11D48),
+                ),
+                const SizedBox(width: 8),
+              ] else if (icon != null && icon!.isNotEmpty) ...[
                 Text(
                   icon!,
                   style: const TextStyle(fontSize: 18),

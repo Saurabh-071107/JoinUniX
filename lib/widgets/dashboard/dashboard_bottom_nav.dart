@@ -4,11 +4,15 @@ import 'package:flutter/material.dart';
 class DashboardBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int>? onTap;
+  final String thirdLabel;
+  final IconData thirdIcon;
 
   const DashboardBottomNav({
     super.key,
     this.currentIndex = 0,
     this.onTap,
+    this.thirdLabel = 'Prepare',
+    this.thirdIcon = Icons.auto_stories_rounded,
   });
 
   @override
@@ -66,9 +70,9 @@ class DashboardBottomNav extends StatelessWidget {
                     ),
                     _buildNavItem(
                       index: 2,
-                      icon: Icons.auto_stories_outlined,
-                      activeIcon: Icons.auto_stories_rounded,
-                      label: 'Prepare',
+                      icon: thirdIcon,
+                      activeIcon: thirdIcon,
+                      label: thirdLabel,
                     ),
                     _buildNavItem(
                       index: 3,

@@ -145,7 +145,7 @@ class _CollegeSearchScreenState extends State<CollegeSearchScreen> {
   }
 
   void _openDetailSheet(CollegeItem college) {
-    CollegeDetailBottomSheet.show(
+    CollegeDetailScreen.push(
       context,
       college: college,
       onFavoriteToggle: (isFav) => _toggleFavorite(college, isFav),

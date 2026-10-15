@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../data/dashboard_data.dart';
+import '../data/features.dart';
 import '../widgets/dashboard/career_paths_section.dart';
 import '../widgets/dashboard/dashboard_bottom_nav.dart';
 import '../widgets/dashboard/dashboard_header.dart';
@@ -7,14 +9,17 @@ import '../widgets/dashboard/preparation_section.dart';
 import '../widgets/dashboard/quick_actions_bar.dart';
 import '../widgets/dashboard/recommended_section.dart';
 import '../widgets/dashboard/upcoming_section.dart';
+import '../widgets/feature_widgets.dart';
 import 'college_search_screen.dart';
 import 'explore_screen.dart';
+import 'feature_screen.dart';
 import 'prepare_screen.dart';
 import 'opportunities_screen.dart';
+import 'study_abroad_screen.dart';
 import '../data/profile_data.dart';
 import 'profile_screen.dart';
 
-/// Full-featured, responsive dashboard matching the reference design.
+/// Full-featured, responsive dashboard. Content adapts to the user's [Persona].
 class HomeScreen extends StatefulWidget {
   final String userName;
   final String stage;
@@ -42,31 +47,36 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _navIndex = 0;
 
+  Persona get _p => Persona.of(widget.stage);
+
   String get _displayName =>
       widget.userName.trim().isNotEmpty ? widget.userName.trim() : 'Saurabh';
 
-  String get _displayRole {
-    if (widget.stream.isNotEmpty) {
-      return '${widget.stream} Aspirant';
-    }
-    if (widget.stage.isNotEmpty) {
-      return '${widget.stage} Aspirant';
-    }
-    return 'Engineering Aspirant';
+  String get _displayRole => switch (_p) {
+        Persona.school => '${widget.selectedClass} Student'.trim(),
+        Persona.pro => widget.stream.isNotEmpty ? widget.stream : 'Working Professional',
+        _ => '${widget.stream.isNotEmpty ? widget.stream : widget.stage} Aspirant',
+      };
+
+  String get _location => widget.location.isNotEmpty ? widget.location : 'India';
+
+  void _go(int tab) => setState(() => _navIndex = tab);
+
+  /// Opens the first feature available to this persona, else [orElse].
+  void _open(List<Feature> candidates, [VoidCallback? orElse]) {
+    final f = Feature.firstFor(_p, candidates);
+    f != null ? openFeature(context, f) : orElse?.call();
   }
 
   void _navigateToCollegeSearch() {
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => CollegeSearchScreen(
-          location: widget.location.isNotEmpty ? widget.location : 'India',
-        ),
-      ),
+      MaterialPageRoute(builder: (_) => CollegeSearchScreen(location: _location)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final (tabLabel, tabIcon) = _p.tab;
     return Scaffold(
       extendBody: true,
       backgroundColor: const Color(0xFFF8FAFC),
@@ -79,109 +89,135 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+      floatingActionButton: AiFab(persona: _p),
       bottomNavigationBar: DashboardBottomNav(
         currentIndex: _navIndex,
-        onTap: (index) => setState(() => _navIndex = index),
+        thirdLabel: tabLabel,
+        thirdIcon: tabIcon,
+        onTap: _go,
       ),
     );
   }
 
-  Widget _buildCurrentBody() {
-    switch (_navIndex) {
-      case 1:
-        return _buildExploreTab();
-      case 2:
-        return _buildPrepareTab();
-      case 3:
-        return _buildOpportunitiesTab();
-      case 4:
-        return _buildProfileTab();
-      case 0:
-      default:
-        return _buildHomeTab();
-    }
-  }
+  Widget _buildCurrentBody() => switch (_navIndex) {
+        1 => ExploreScreen(location: _location, persona: _p),
+        2 => _buildThirdTab(),
+        3 => OpportunitiesScreen(persona: _p, onAction: _showSnackBar),
+        4 => _buildProfileTab(),
+        _ => _buildHomeTab(),
+      };
+
+  Widget _buildThirdTab() => switch (_p) {
+        Persona.senior || Persona.gap => PrepareScreen(onAction: _showSnackBar),
+        Persona.school => FeatureHubTab(
+            title: 'Discover Yourself',
+            subtitle: 'Explore streams, careers & fun challenges before you choose your path.',
+            icon: Icons.lightbulb_rounded,
+            features: _p.hub,
+            footer: CareerPathsSection(
+              onSeeAll: () => _open(const [Feature.after12th]),
+              onItemTap: (_) => _open(const [Feature.after12th]),
+            ),
+          ),
+        _ => StudyAbroadScreen(
+            onSearchTap: _navigateToCollegeSearch,
+          ),
+      };
 
   Widget _buildHomeTab() {
+    final p = _p;
+    const gap = SliverToBoxAdapter(child: SizedBox(height: 14));
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        // 1. Dashboard Top Bar (Header)
         SliverToBoxAdapter(
           child: DashboardHeader(
             userName: _displayName,
             role: _displayRole,
-            onSearchTap: () => setState(() => _navIndex = 1),
+            onSearchTap: () => _go(1),
             onNotificationTap: () => _showSnackBar('No new notifications'),
-            onProfileTap: () => setState(() => _navIndex = 4),
+            onProfileTap: () => _go(4),
           ),
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 6)),
 
-        // 2. Journey & Ambition Hero Cards
+        // Journey & Ambition hero
         SliverToBoxAdapter(
           child: JourneyHeroSection(
-            stream: widget.stream.isNotEmpty ? widget.stream : 'Engineering',
-            onContinueJourney: () => setState(() => _navIndex = 2),
-            onAmbitionTap: () => setState(() => _navIndex = 1),
+            stream: widget.stream.isNotEmpty
+                ? widget.stream
+                : (p == Persona.school ? 'Discovery' : 'Career'),
+            onContinueJourney: () => _go(2),
+            onAmbitionTap: () => _open(const [Feature.uniQuest, Feature.indiaCourses, Feature.after12th]),
           ),
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
-        // 3. Quick Action Shortcuts
+        // Quick actions (prep only for JEE track, no internships for school)
         SliverToBoxAdapter(
           child: QuickActionsBar(
-            onItemTap: (item) {
-              if (item.title.contains('Colleges')) {
-                _navigateToCollegeSearch();
-              } else {
-                _showSnackBar('Selected: ${item.title.replaceAll('\n', ' ')}');
-              }
+            items: quickActions
+                .where((q) =>
+                    (p.preps || !q.title.contains('Preparation')) &&
+                    (p != Persona.school || !q.title.contains('Internships')))
+                .toList(),
+            onItemTap: (item) => switch (item.title) {
+              String t when t.contains('Preparation') => _go(2),
+              String t when t.contains('Colleges') => _navigateToCollegeSearch(),
+              String t when t.contains('Careers') => _open(const [Feature.after12th, Feature.hackathons], () => _go(1)),
+              _ => _open(const [Feature.hackathons], () => _go(3)),
             },
           ),
         ),
-        const SliverToBoxAdapter(child: SizedBox(height: 14)),
+        gap,
 
-        // 4. Your Preparation Section
+        // Persona tools
         SliverToBoxAdapter(
-          child: PreparationSection(
-            onViewAll: () => setState(() => _navIndex = 2),
-            onItemTap: (item) => _showSnackBar('Opened: ${item.title}'),
+          child: FeatureRow(
+            features: Feature.forPersona(p),
+            onSeeAll: () => _go(p.preps ? 1 : 2),
           ),
         ),
-        const SliverToBoxAdapter(child: SizedBox(height: 14)),
+        gap,
 
-        // 5. Recommended For You Section
-        SliverToBoxAdapter(
-          child: RecommendedSection(
-            onSeeAll: _navigateToCollegeSearch,
-            onItemTap: (item) {
-              if (item.title.contains('Colleges') ||
-                  item.title.contains('IIT') ||
-                  item.title.contains('NIRF')) {
-                _navigateToCollegeSearch();
-              } else {
-                _showSnackBar('Opened: ${item.title.replaceAll('\n', ' ')}');
-              }
-            },
+        // JEE / NEET track only
+        if (p.preps) ...[
+          SliverToBoxAdapter(
+            child: PreparationSection(
+              onViewAll: () => _go(2),
+              onItemTap: (item) => item.title.contains('Mock') || item.title.contains('Practice')
+                  ? openFeature(context, Feature.examArena)
+                  : _go(2),
+            ),
           ),
-        ),
-        const SliverToBoxAdapter(child: SizedBox(height: 14)),
-
-        // 6. Upcoming For You Section
-        SliverToBoxAdapter(
-          child: UpcomingSection(
-            onSeeAll: () => setState(() => _navIndex = 3),
-            onItemTap: (item) => _showSnackBar('Event: ${item.title}'),
+          gap,
+          SliverToBoxAdapter(
+            child: RecommendedSection(
+              onSeeAll: _navigateToCollegeSearch,
+              onItemTap: (item) => item.title.contains('Scholarships')
+                  ? openFeature(context, Feature.scholarships)
+                  : item.title.contains('Career')
+                      ? openFeature(context, Feature.after12th)
+                      : openFeature(context, Feature.indiaCourses),
+            ),
           ),
-        ),
-        const SliverToBoxAdapter(child: SizedBox(height: 14)),
+          gap,
+          SliverToBoxAdapter(
+            child: UpcomingSection(
+              onSeeAll: () => _go(3),
+              onItemTap: (item) => openFeature(
+                context,
+                item.title.contains('JEE') ? Feature.examArena : Feature.indiaCourses,
+              ),
+            ),
+          ),
+          gap,
+        ],
 
-        // 7. Explore Career Paths Section
         SliverToBoxAdapter(
           child: CareerPathsSection(
-            onSeeAll: () => setState(() => _navIndex = 1),
-            onItemTap: (item) => _showSnackBar('Career: ${item.title.replaceAll('\n', ' ')}'),
+            onSeeAll: () => _go(1),
+            onItemTap: (_) => _open(const [Feature.after12th, Feature.hackathons]),
           ),
         ),
 
@@ -191,37 +227,18 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildExploreTab() {
-    return ExploreScreen(
-      location: widget.location.isNotEmpty ? widget.location : 'India',
-    );
-  }
-
-  Widget _buildPrepareTab() {
-    return PrepareScreen(
-      onAction: _showSnackBar,
-    );
-  }
-
-  Widget _buildOpportunitiesTab() {
-    return OpportunitiesScreen(
-      onAction: _showSnackBar,
-    );
-  }
-
   Widget _buildProfileTab() {
     return ProfileScreen(
       user: UserProfileModel(
         name: _displayName,
         email: 'saurabh.singh@example.com',
-        selectedClass: widget.selectedClass.isNotEmpty ? widget.selectedClass : 'Class 12th',
-        exam: widget.stream.isNotEmpty ? widget.stream : 'JEE (Main + Advanced)',
+        selectedClass: widget.selectedClass.isNotEmpty ? widget.selectedClass : widget.stage,
+        exam: widget.stream.isNotEmpty ? widget.stream : widget.stage,
         preparationProgress: 0.75,
       ),
       onAction: _showSnackBar,
     );
   }
-
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();

@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import '../data/features.dart';
 import '../widgets/opportunities/opportunities_header.dart';
 import '../widgets/opportunities/opportunities_category_tabs.dart';
 import '../widgets/opportunities/recommended_opportunities_section.dart';
 import '../widgets/opportunities/upcoming_deadlines_section.dart';
 import '../widgets/opportunities/explore_more_section.dart';
+import 'feature_screen.dart';
 
 class OpportunitiesScreen extends StatefulWidget {
+  final Persona persona;
   final Function(String message)? onAction;
 
   const OpportunitiesScreen({
     super.key,
+    this.persona = Persona.senior,
     this.onAction,
   });
 
@@ -90,7 +94,16 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
                 // 5. Explore More
                 SliverToBoxAdapter(
                   child: ExploreMoreSection(
-                    onItemTap: (item) => _notify('Opened: ${item.title}'),
+                    onItemTap: (item) {
+                      final f = Feature.firstFor(widget.persona, switch (item.id) {
+                        'top-companies' => const [Feature.hackathons],
+                        'hackathons' => const [Feature.hackathons, Feature.sharkTank],
+                        'scholarships' => const [Feature.scholarships],
+                        'research' => const [Feature.coursesCampus],
+                        _ => const [],
+                      });
+                      f != null ? openFeature(context, f) : _notify('${item.title} coming soon for your stage');
+                    },
                   ),
                 ),
 

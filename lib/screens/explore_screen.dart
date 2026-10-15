@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../data/explore_data.dart';
+import '../data/features.dart';
 import '../widgets/explore/continue_exploration_section.dart';
 import '../widgets/explore/explore_feature_grid.dart';
 import '../widgets/explore/explore_filter_chips.dart';
@@ -6,15 +8,20 @@ import '../widgets/explore/explore_hero_banner.dart';
 import '../widgets/explore/explore_search_bar.dart';
 import '../widgets/explore/explore_top_bar.dart';
 import '../widgets/explore/top_colleges_section.dart';
+import 'college_detail_screen.dart';
 import 'college_search_screen.dart';
+import 'feature_screen.dart';
+import '../data/college_search_data.dart';
 
 class ExploreScreen extends StatefulWidget {
   final String location;
+  final Persona persona;
   final ValueChanged<String>? onNotificationTap;
 
   const ExploreScreen({
     super.key,
     this.location = 'India',
+    this.persona = Persona.senior,
     this.onNotificationTap,
   });
 
@@ -53,6 +60,18 @@ class _ExploreScreenState extends State<ExploreScreen> {
       ),
     );
   }
+
+  /// Feature behind an explore card for this persona (null = hide card).
+  Feature? _target(ExploreFeatureCardItem card) => Feature.firstFor(widget.persona, switch (card.title) {
+        String t when t.contains('Careers') => const [Feature.after12th, Feature.hackathons],
+        String t when t.contains('Abroad') => const [Feature.countryGuides],
+        String t when t.contains('Courses') => const [Feature.indiaCourses, Feature.coursesCampus, Feature.after12th],
+        String t when t.contains('Internships') => const [Feature.hackathons],
+        String t when t.contains('Events') => const [Feature.events, Feature.sharkTank],
+        _ => const [],
+      });
+
+  bool _isColleges(ExploreFeatureCardItem card) => card.title.contains('Colleges');
 
   @override
   Widget build(BuildContext context) {
@@ -107,13 +126,10 @@ class _ExploreScreenState extends State<ExploreScreen> {
             // 5. Core 2x3 Feature Grid (6 Cards)
             SliverToBoxAdapter(
               child: ExploreFeatureGrid(
-                onCardTap: (card) {
-                  if (card.title == 'Find Colleges') {
-                    _navigateToCollegeSearch();
-                  } else {
-                    _showSnackBar('Opening ${card.title}');
-                  }
-                },
+                cards: exploreFeatureCards.where((c) => _isColleges(c) || _target(c) != null).toList(),
+                onCardTap: (card) => _isColleges(card)
+                    ? _navigateToCollegeSearch()
+                    : openFeature(context, _target(card)!),
               ),
             ),
             const SliverToBoxAdapter(child: SizedBox(height: 6)),
@@ -136,7 +152,14 @@ class _ExploreScreenState extends State<ExploreScreen> {
             // 7. Top Colleges For You
             SliverToBoxAdapter(
               child: TopCollegesSection(
-                onCollegeTap: (college) => _navigateToCollegeSearch(),
+                onCollegeTap: (college) {
+                  final match = allCollegesList.firstWhere(
+                    (c) =>
+                        c.shortName.toLowerCase() == college.name.toLowerCase(),
+                    orElse: () => allCollegesList.first,
+                  );
+                  CollegeDetailScreen.push(context, college: match);
+                },
               ),
             ),
 

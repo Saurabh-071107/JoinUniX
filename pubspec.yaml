@@ -69,8 +69,42 @@ flutter:
     - assets/images/locations/
     - assets/images/profile/
     - assets/images/home/
+    - assets/images/home/box_mentors.png
+    - assets/images/home/box_unistay.png
+    - assets/images/home/box_after_12th.png
+    - assets/images/home/banner_lightbulb.png
+    - assets/images/home/box_scholarships.png
+    - assets/images/home/box_events.png
+    - assets/images/home/box_shark_tank.png
+    - assets/images/home/box_hackathons.png
+    - assets/images/home/box_country_guides.png
+    - assets/images/home/box_app_tracker.png
+    - assets/images/home/box_campus.png
+    - assets/images/home/box_unifinance.png
+    - assets/images/home/box_consultancies.png
     - assets/images/dashboard/
     - assets/images/opportunities/
+    - assets/images/consulai/
+    - assets/images/uniquest/
+    - assets/images/unifinance/
+    - assets/images/abroad/
+    - assets/images/abroad/unistay_kendall_square.png
+    - assets/images/abroad/unistay_harvard_yard.png
+    - assets/images/abroad/unistay_beacon_hill.png
+    - assets/images/abroad/scholarship_us_mit.png
+    - assets/images/abroad/scholarship_germany_reichstag.png
+    - assets/images/abroad/scholarship_uk_oxford.png
+    - assets/images/abroad/events_hero_montage.png
+    - assets/images/abroad/event_mega_fair.png
+    - assets/images/abroad/event_german_visa.png
+    - assets/images/abroad/event_uk_fair.png
+    - assets/images/opportunities/hackathon_hero_launch.png
+    - assets/images/opportunities/internship_hero_launch.png
+    - assets/images/opportunities/hackathon_ai_robot.png
+    - assets/images/opportunities/hackathon_cleantech_globe.png
+    - assets/images/opportunities/internship_ai_robot.png
+    - assets/images/opportunities/internship_flutter_mobile.png
+    - assets/images/opportunities/internship_design_tools.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

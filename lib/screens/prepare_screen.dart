@@ -6,6 +6,8 @@ import '../widgets/prepare/study_plan_section.dart';
 import '../widgets/prepare/chapters_topics_section.dart';
 import '../widgets/prepare/practice_tests_section.dart';
 import '../widgets/prepare/streak_banner.dart';
+import '../data/features.dart';
+import 'feature_screen.dart';
 
 class PrepareScreen extends StatelessWidget {
   final Function(String message)? onAction;
@@ -87,7 +89,9 @@ class PrepareScreen extends StatelessWidget {
                 SliverToBoxAdapter(
                   child: PracticeTestsSection(
                     onViewAll: () => _notify(context, 'Viewing All Practice Sets & Tests'),
-                    onCardTap: (card) => _notify(context, 'Selected: ${card.title.replaceAll('\n', ' ')}'),
+                    onCardTap: (card) => card.title.contains('Mock') || card.title.contains('Previous')
+                        ? openFeature(context, Feature.examArena)
+                        : _notify(context, 'Selected: ${card.title.replaceAll('\n', ' ')}'),
                   ),
                 ),
 
